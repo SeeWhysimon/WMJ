@@ -1,3 +1,0 @@
-/home/simon/OPENCV/WMJ/Week3/build/CMakeFiles/Project.dir
-/home/simon/OPENCV/WMJ/Week3/build/CMakeFiles/edit_cache.dir
-/home/simon/OPENCV/WMJ/Week3/build/CMakeFiles/rebuild_cache.dir
