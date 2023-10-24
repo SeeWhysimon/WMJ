@@ -10,7 +10,7 @@ double real_height = 70; // optional?
 double img_height = 640;
 
 // Define the boundary of white
-cv::Scalar lower_white_hsv = cv::Scalar(0, 0, 60);
+cv::Scalar lower_white_hsv = cv::Scalar(0, 0, 100);
 cv::Scalar upper_white_hsv = cv::Scalar(255, 64, 255);
 
 // Define the boundary of red
@@ -48,9 +48,10 @@ int getPixelSum(cv::Mat& image) {
     return a;
 }
 
-std::string imgMatch(cv::Mat& image) {
+void imgMatch(cv::Mat& image, int& rate, std::string& num) {
     cv::Mat imgSub;
-    std::string num = "";
+    double min = 10e5;
+    num = "";
 
     for (int i = 0; i < 10; ++i) {
         cv::Mat temp = cv::imread("../src_pic/" + std::to_string(i) + ".png");
@@ -58,12 +59,14 @@ std::string imgMatch(cv::Mat& image) {
         cv::resize(temp, temp, cv::Size(48, 48), 0, 0, cv::INTER_LINEAR);
         cv::resize(image, image, cv::Size(48, 48), 0, 0, cv::INTER_LINEAR);
         cv::absdiff(temp, image, imgSub);
-        int rate = getPixelSum(imgSub);
+        rate = getPixelSum(imgSub);
         // Editable  18900 < rate < 18950
-        if (rate < 5000 && rate > 500) 
+        if (rate < min) {
+            min = rate;
+            
             num = std::to_string(i);
+        }
     }
-    return num;
 }
 //***********************************************************//
 
@@ -137,10 +140,9 @@ int main(int argv, char** argc) {
         cv::findContours(frame_hsv_white, contours_old, hierarchy, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
         for (int i = 0; i < contours_old.size(); ++i) {
             cv::Rect rect = cv::boundingRect(contours_old[i]);
-
-            if (((rect.height > 50 && rect.height < 5000) // Editable
-                && (rect.width < 5000)) && //Editable
-                (rect.area() < 50000 && rect.area() > 100)) { // Editable
+            
+            // Editable
+            if (((rect.height > 50 && rect.height < 5000) && (rect.width > 50 && rect.width < 5000)) && (rect.area() < 20000)) {
                 
                 double ratio = (double)rect.width / (double) rect.height;
                 if (ratio < 1.5 && ratio > 0.5) {
@@ -149,20 +151,20 @@ int main(int argv, char** argc) {
                 }
             }
         }
-        
+        for (int i = 0; i < rects.size(); ++i) 
+            cv::rectangle(frame, rects[i], cv::Scalar(128, 255, 255), 5);
         //*************************************************************//
-        std::string num = "";
+        cv::Mat final[rects.size()];
+        std::string matchingNum = "";
+        int matchingRate = 0;
         for (int i = 0; i < rects.size(); ++i) {
-            int matchingNum = 0;
-            int matchingRate = 0;
-            cv::Mat mask = cv::Mat::zeros(rects[i].size(), frame_hsv_white.type());
-            cv::drawContours(mask, contours_new, i, cv::Scalar::all(255), -1);
-            cv::Mat final;
-            frame(rects[i]).copyTo(final, mask);
-            num += imgMatch(final);
+            frame(rects[i]).copyTo(final[i]);
+            imgMatch(final[i], matchingRate, matchingNum);
         }
-        cv::putText(frame, num, cv::Point(20, 400), cv::FONT_HERSHEY_PLAIN, 5, cv::Scalar(128, 255, 255), 5);
         //***********************************************************//
+        if (matchingRate < 10e6) {
+            cv::putText(frame, matchingNum, cv::Point(600, 100), cv::FONT_HERSHEY_PLAIN, 5, cv::Scalar(128, 255, 255), 5);
+        }
 
         cv::imshow("Video", frame);
 

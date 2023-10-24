@@ -7,7 +7,7 @@ double real_height = 70; // optional?
 double img_height = 640;
 
 // Define the boundary of white
-cv::Scalar lower_white_hsv = cv::Scalar(0, 0, 60);
+cv::Scalar lower_white_hsv = cv::Scalar(0, 0, 100);
 cv::Scalar upper_white_hsv = cv::Scalar(255, 64, 255);
 // Define the boundary of red
 cv::Scalar lower_red_hsv = cv::Scalar(0, 70, 127);
@@ -28,23 +28,21 @@ int getPixelSum(cv::Mat& image) {
     }
     return a;
 }
-
-std::string imgMatch(cv::Mat& image) {
+void imgMatch(cv::Mat& image, int& rate, std::string& num) {
     cv::Mat imgSub;
-    std::string num = "";
-
+    double min = 10e5;
     for (int i = 0; i < 10; ++i) {
         cv::Mat temp = cv::imread("../src_pic/" + std::to_string(i) + ".png");
         cv::cvtColor(temp, temp, cv::COLOR_BGR2HSV);
         cv::resize(temp, temp, cv::Size(48, 48), 0, 0, cv::INTER_LINEAR);
         cv::resize(image, image, cv::Size(48, 48), 0, 0, cv::INTER_LINEAR);
         cv::absdiff(temp, image, imgSub);
-        int rate = getPixelSum(imgSub);
-        // Editable  18900 < rate < 18950
-        if (rate < 5000 && rate > 500) 
+        rate = getPixelSum(imgSub);
+        if (rate < min) {
+            min = rate;
             num = std::to_string(i);
+        }
     }
-    return num;
 }
 //***********************************************************//
 
@@ -106,7 +104,6 @@ void Armor::colorDetect(cv::Mat frame, std::vector<std::vector<cv::Point>> conto
         else {
             // Clean up the fromer trash
             contours.clear(); contours_temp.clear(); hierarchy.clear();
-            
             Armor::Color = "Gray";
         }
     }
@@ -117,7 +114,6 @@ void Armor::numberDetect(cv::Mat frame, std::vector<std::vector<cv::Point>> cont
     // Number detection
     cv::Mat frame_hsv_white, frame_hsv_ori;
     cv::cvtColor(frame, frame_hsv_ori, cv::COLOR_BGR2HSV);
-    std::vector<std::vector<cv::Point>> contours_temp;
         
     // Process the frame
     cv::inRange(frame_hsv_ori, lower_white_hsv, upper_white_hsv, frame_hsv_white);
@@ -135,30 +131,24 @@ void Armor::numberDetect(cv::Mat frame, std::vector<std::vector<cv::Point>> cont
     for (int i = 0; i < contours.size(); ++i) {
         cv::Rect rect = cv::boundingRect(contours[i]);
 
-        if (((rect.height > 50 && rect.height < 5000) // Editable
-            && (rect.width < 5000)) && //Editable
-            (rect.area() < 50000 && rect.area() > 100)) { // Editable
-                
+        if (((rect.height > 50 && rect.height < 5000) && (rect.width > 50 && rect.width < 5000)) && (rect.area() < 20000)) { // Editable
             double ratio = (double)rect.width / (double) rect.height;
-            if (ratio < 1.5 && ratio > 0.5) {
-                contours_temp.push_back(contours[i]);
-                rects.push_back(cv::boundingRect(contours[i]));
-            }
+            if (ratio < 1.5 && ratio > 0.5) 
+                rects.push_back(rect);
         }
     }
     //*************************************************************//
-    std::string num = "";
+    cv::Mat final[rects.size()];
+    std::string matchingNum = "";
+    int matchingRate = 0;
     for (int i = 0; i < rects.size(); ++i) {
-        int matchingNum = 0;
-        int matchingRate = 0;
-        cv::Mat mask = cv::Mat::zeros(rects[i].size(), frame_hsv_white.type());
-        cv::drawContours(mask, contours_temp, i, cv::Scalar::all(255), -1);
-        cv::Mat final;
-        frame(rects[i]).copyTo(final, mask);
-        num += imgMatch(final);
+        frame(rects[i]).copyTo(final[i]);
+        imgMatch(final[i], matchingRate, matchingNum);
     }
     //***********************************************************//
-    Armor::Number = num;
+    if (matchingRate < 10e6) {
+        Armor::Number = matchingNum;
+    }
     contours.clear(); hierarchy.clear(); rects.clear();
 }
 
@@ -174,7 +164,12 @@ void Armor::armorInit(cv::Mat frame, std::vector<std::vector<cv::Point>> contour
 void Armor::showInfo(cv::Mat frame) {
     std::string distance_str = std::to_string(Armor::Distance / 1000);
 
-    cv::putText(frame, Armor::Color, cv::Point(20, 100), cv::FONT_HERSHEY_PLAIN, 5, cv::Scalar(128, 255, 255), 5);
+    if (Armor::Color == "Blue") 
+        cv::putText(frame, Armor::Color, cv::Point(20, 100), cv::FONT_HERSHEY_PLAIN, 5, cv::Scalar(255, 50, 50), 5);
+    else if (Armor::Color == "Red")
+        cv::putText(frame, Armor::Color, cv::Point(20, 100), cv::FONT_HERSHEY_PLAIN, 5, cv::Scalar(50, 50, 255), 5);
+    else 
+        cv::putText(frame, Armor::Color, cv::Point(20, 100), cv::FONT_HERSHEY_PLAIN, 5, cv::Scalar(128, 128, 128), 5);
     cv::putText(frame, distance_str + " m", cv::Point(20, 200), cv::FONT_HERSHEY_PLAIN, 5, cv::Scalar(128, 255, 255), 5);
     cv::putText(frame, Armor::Size, cv::Point(20, 300), cv::FONT_HERSHEY_PLAIN, 5, cv::Scalar(128, 255, 255), 5);
     cv::putText(frame, Armor::Number, cv::Point(20, 400), cv::FONT_HERSHEY_PLAIN, 5, cv::Scalar(128, 255, 255), 5);
