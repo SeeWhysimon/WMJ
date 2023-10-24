@@ -9,7 +9,7 @@ void paramInit(std::string filename);
 
 class Armor {
 public:
-    void distDetect (double, double, double, double, double);
+    void distDetect(double, double, double, double, double);
     void sizeDetect(double, double);
     void colorDetect(cv::Mat, std::vector<std::vector<cv::Point>>, std::vector<cv::Vec4i>);
     void numberDetect(cv::Mat, std::vector<std::vector<cv::Point>>, std::vector<cv::Vec4i>, std::vector<cv::Rect>);
