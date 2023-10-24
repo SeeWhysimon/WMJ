@@ -7,20 +7,20 @@ int main(int argv, char** argc) {
         return -1;
     }
 
+    paramInit(argc[2]);
     while (true) {
         cv::Mat frame, frame_hsv_ori;
         Armor armor;
         cap >> frame;
-        std::vector<std::vector<cv::Point>> contours;
-        std::vector<cv::Vec4i> hierarchy;
-        std::vector<cv::Rect> rects;
-
         // Check the status of frame
         if (frame.empty()) {
             std::cout << "Blank frame" << std::endl;
             break;
         }
-
+        
+        std::vector<std::vector<cv::Point>> contours;
+        std::vector<cv::Vec4i> hierarchy;
+        std::vector<cv::Rect> rects;
         armor.armorInit(frame, contours, hierarchy, rects);
         armor.showInfo(frame);
         cv::imshow("Video", frame);
@@ -29,7 +29,6 @@ int main(int argv, char** argc) {
         if (c == ' ')
             break;
     }
-
     cap.release();
     cv::destroyAllWindows();
     return 0;

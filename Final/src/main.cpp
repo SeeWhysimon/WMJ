@@ -8,6 +8,7 @@ double focal_len = 50;
 double sensor_height = 36;
 double real_height = 70; // optional?
 double img_height = 640;
+double tan_judge = 1;
 
 // Define the boundary of white
 cv::Scalar lower_white_hsv = cv::Scalar(0, 0, 100);
@@ -29,7 +30,7 @@ double distDetect (double img_height, double real_height, double focal_len, doub
 // Editable
 std::string sizeDetect(double obj_height, double distance) {
     double tan = obj_height / distance;
-    if (tan > 1) 
+    if (tan > tan_judge) 
         return "Big";
     else 
         return "Small";
@@ -63,7 +64,6 @@ void imgMatch(cv::Mat& image, int& rate, std::string& num) {
         // Editable  18900 < rate < 18950
         if (rate < min) {
             min = rate;
-            
             num = std::to_string(i);
         }
     }

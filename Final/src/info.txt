@@ -1,0 +1,5 @@
+focal_len = 50
+sensor_height = 36
+real_height = 70
+img_height = 640
+tan_judge = 1

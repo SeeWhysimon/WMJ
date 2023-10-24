@@ -1,10 +1,38 @@
 #include "Project.hpp"
 
 // Device parameters
-double focal_len = 50;
-double sensor_height = 36;
-double real_height = 70; // optional?
-double img_height = 640;
+double focal_len = 1;
+double sensor_height = 1;
+double real_height = 1; // optional?
+double img_height = 1;
+double tan_judge = 1;
+
+void paramInit(std::string filename) {
+    std::fstream file_in;
+    file_in.open(filename, std::ios::in);
+    if (file_in.is_open()) {
+        std::string line;
+        // Process every single line
+        while (std::getline(file_in, line)) {
+            std::istringstream inString(line);
+            std::string word;
+            std::vector<std::string> words;
+            while (inString >> word) 
+                words.push_back(word);
+            
+            if (words[0] == "focal_len") focal_len = std::stod(words[2]);
+            else if (words[0] == "sensor_height") sensor_height = std::stod(words[2]);
+            else if (words[0] == "real_height") real_height = std::stod(words[2]);
+            else if (words[0] == "img_height") img_height = std::stod(words[2]);
+            else if (words[0] == "tan_judge") tan_judge = std::stod(words[2]);
+        }
+        std::cout << "Parameters successfully initialized." << std::endl;
+        std::cout << focal_len << " " << sensor_height << " " << real_height << " " << img_height << " " << tan_judge << std::endl;
+        file_in.close();
+    }
+    else
+        std::cout << "Failed to initialize the parameters." << std::endl;
+}
 
 // Define the boundary of white
 cv::Scalar lower_white_hsv = cv::Scalar(0, 0, 100);
@@ -54,7 +82,7 @@ void Armor::distDetect (double img_height, double real_height, double focal_len,
 // Judging the size of the armor (size judging criteria editable)
 void Armor::sizeDetect(double obj_height, double distance) {
     double tan = obj_height / distance;
-    if (tan > 1) 
+    if (tan > tan_judge) 
         Armor::Size = "Big";
     else 
         Armor::Size = "Small";

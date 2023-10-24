@@ -1,7 +1,11 @@
 #include <iostream>
+#include <fstream>
+#include <sstream>
 #include <opencv2/opencv.hpp>
 #include <string>
 #include <vector>
+
+void paramInit(std::string filename);
 
 class Armor {
 public:
