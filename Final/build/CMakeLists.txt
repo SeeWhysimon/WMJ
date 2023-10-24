@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.0)
 
 project(Project LANGUAGES CXX)  
 
-add_executable(${PROJECT_NAME} ./src/test.cpp ./src/Project.cpp ./src/Project.hpp) 
+add_executable(${PROJECT_NAME} ../src/test.cpp ../src/Project.cpp ../src/Project.hpp) 
 
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_14) 
 target_include_directories(${PROJECT_NAME} PRIVATE include)  
